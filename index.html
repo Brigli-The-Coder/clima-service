@@ -1,218 +1,1002 @@
 <!DOCTYPE html>
 <html lang="sq">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clima Service - Riparim Pajisjesh Shtëpiake</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- <link rel="stylesheet" href="{% static 'clima_service/styles/style.css' %}"> -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Exo+2:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --ice: #00d4ff;
+            --ice-dark: #0099bb;
+            --deep: #020b18;
+            --deep2: #041225;
+            --steel: #0a1f35;
+            --accent: #00ffcc;
+            --glow: rgba(0, 212, 255, 0.35);
+            --text: #c8e8f5;
+            --white: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: var(--deep);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* ---- CANVAS BG ---- */
+        #bgCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ---- NAVBAR ---- */
         .navbar {
-            background-color: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            padding: 12px 30px;
+            background: rgba(2, 11, 24, 0.7);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.15);
+            transition: all 0.4s;
+        }
+        .navbar.scrolled {
+            padding: 8px 30px;
+            background: rgba(2, 11, 24, 0.95);
+            border-bottom-color: rgba(0, 212, 255, 0.4);
+        }
+        .navbar-brand img {
+            width: 52px; height: 52px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--ice);
+            box-shadow: 0 0 16px var(--glow);
+            transition: transform 0.3s;
+        }
+        .navbar-brand img:hover { transform: scale(1.1) rotate(5deg); }
+
+        .nav-link {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text) !important;
+            padding: 6px 16px !important;
+            position: relative;
+            transition: color 0.3s;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 16px; right: 16px;
+            height: 1px;
+            background: var(--ice);
+            transform: scaleX(0);
+            transition: transform 0.3s;
+            box-shadow: 0 0 8px var(--ice);
+        }
+        .nav-link:hover { color: var(--ice) !important; }
+        .nav-link:hover::after { transform: scaleX(1); }
+
+        .navbar-toggler {
+            border: 1px solid var(--ice);
+            padding: 6px 12px;
+            border-radius: 4px;
+            color: var(--ice);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 1px;
+            background: transparent;
+            transition: all 0.3s;
+        }
+        .navbar-toggler:hover { background: rgba(0,212,255,0.1); }
+
+        /* ---- HERO ---- */
+        #hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            z-index: 1;
         }
 
-        .navbar-nav .nav-link {
-            color: #fff;
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background-image: url('https://raw.githubusercontent.com/Brigli-The-Coder/Projects-Files/refs/heads/main/Clima-Service-2.jpg');
+            background-size: cover;
+            background-position: center;
+            z-index: -1;
+        }
+        .hero-bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                135deg,
+                rgba(2,11,24,0.92) 0%,
+                rgba(4,18,37,0.75) 50%,
+                rgba(0,100,150,0.3) 100%
+            );
         }
 
-        .navbar-nav .nav-link:hover {
-            color: #ddd;
-        }
-
-        .navbar-toggler-icon {
-            background-image: url('data:image/svg+xml;charset=utf8,...');
-        }
-
-        .blurr {
-            background-color: rgba(0, 0, 0, .5);
-            padding: 10px;
-            border-radius: 8px;
-            width: 90vw;
-        }
-
-        /* Fix for navbar responsiveness */
-        @media (max-width: 767px) {
-            .navbar-toggler {
-                z-index: 1050; /* Ensure navbar toggle button appears correctly */
-            }
-            .navbar-collapse {
-                flex-basis: 100%;
-                justify-content: center;
-            }
-        }
-        .show{
+        .hero-content {
+            position: relative;
+            z-index: 2;
             text-align: center;
+            padding: 20px;
+            max-width: 860px;
+        }
+
+        .hero-eyebrow {
+            display: inline-block;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
             font-weight: 700;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--ice);
+            border: 1px solid rgba(0,212,255,0.4);
+            padding: 5px 18px;
+            border-radius: 2px;
+            margin-bottom: 28px;
+            animation: fadeSlideUp 1s ease both;
+            animation-delay: 0.2s;
+            background: rgba(0,212,255,0.05);
         }
-        .slid{
-            animation: slid ease-in-out 2s;
-        }
-        @keyframes slid {
-            0%{
-                opacity: 0;
-                transform: translateX(-200px);
-            }
-            100%{
-                opacity: 1;
-                transform: translateX(0px);
-            }
-            
-        }
-        .collapsing{
-            text-align: center;
+
+        .hero-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: clamp(44px, 8vw, 90px);
             font-weight: 700;
+            line-height: 1.05;
+            color: var(--white);
+            margin-bottom: 10px;
+            animation: fadeSlideUp 1s ease both;
+            animation-delay: 0.4s;
         }
-        .a{
+        .hero-title span {
+            background: linear-gradient(90deg, var(--ice), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block;
+        }
+
+        .hero-sub {
+            font-size: 18px;
+            font-weight: 300;
+            color: var(--text);
+            margin: 20px 0 36px;
+            animation: fadeSlideUp 1s ease both;
+            animation-delay: 0.6s;
+            letter-spacing: 0.5px;
+            line-height: 1.6;
+        }
+
+        .hero-cta {
+            animation: fadeSlideUp 1s ease both;
+            animation-delay: 0.8s;
+        }
+
+        .btn-glow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--ice), var(--ice-dark));
+            color: var(--deep);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 14px 36px;
+            border-radius: 2px;
             text-decoration: none;
-            color: white;
-            font-size: 20px;
-            font-weight: 200;
-            padding: 3px 5px;
-            border-radius: 8px;
-            background-color: rgba(0, 0, 0, .5);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,212,255,0.5), 0 4px 20px rgba(0,0,0,0.4);
+            transition: all 0.3s;
+            border: none;
+        }
+        .btn-glow::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -60%;
+            width: 60%; height: 200%;
+            background: rgba(255,255,255,0.25);
+            transform: skewX(-20deg);
+            transition: left 0.5s;
+        }
+        .btn-glow:hover { 
+            transform: translateY(-3px);
+            box-shadow: 0 0 50px rgba(0,212,255,0.8), 0 8px 30px rgba(0,0,0,0.5);
+            color: var(--deep);
+        }
+        .btn-glow:hover::before { left: 120%; }
+
+        .btn-outline-glow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: transparent;
+            color: var(--ice);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 13px 36px;
+            border-radius: 2px;
+            text-decoration: none;
+            border: 1px solid var(--ice);
+            box-shadow: inset 0 0 0 0 var(--ice);
+            transition: all 0.3s;
+        }
+        .btn-outline-glow:hover {
+            background: rgba(0,212,255,0.1);
+            box-shadow: 0 0 20px rgba(0,212,255,0.3);
+            color: var(--white);
+            transform: translateY(-3px);
+        }
+
+        .hero-scroll {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            animation: bounce 2s infinite;
+        }
+        .hero-scroll span {
+            display: block;
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, transparent, var(--ice));
+            margin: 0 auto;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(10px); }
+        }
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---- SECTION COMMON ---- */
+        section { position: relative; z-index: 1; }
+
+        .section-eyebrow {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--ice);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .section-eyebrow::before {
+            content: '';
+            width: 30px;
+            height: 1px;
+            background: var(--ice);
+            box-shadow: 0 0 8px var(--ice);
+        }
+
+        .section-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 700;
+            color: var(--white);
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+        .section-title em {
+            font-style: normal;
+            background: linear-gradient(90deg, var(--ice), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ---- ABOUT ---- */
+        #about {
+            padding: 120px 0;
+            background: linear-gradient(180deg, var(--deep) 0%, var(--deep2) 100%);
+        }
+
+        .about-image-wrap {
+            position: relative;
+            padding: 20px;
+        }
+        .about-image-wrap::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 60%; height: 60%;
+            border-top: 2px solid var(--ice);
+            border-left: 2px solid var(--ice);
+            border-radius: 0;
+            opacity: 0.6;
+        }
+        .about-image-wrap::after {
+            content: '';
+            position: absolute;
+            bottom: 0; right: 0;
+            width: 60%; height: 60%;
+            border-bottom: 2px solid var(--accent);
+            border-right: 2px solid var(--accent);
+            opacity: 0.6;
+        }
+        .about-image-wrap img {
+            width: 100%;
+            border-radius: 4px;
+            filter: brightness(0.9) contrast(1.1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(0,212,255,0.1);
+        }
+
+        .about-text p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: rgba(200,232,245,0.8);
+            margin-bottom: 18px;
+        }
+
+        .stat-row {
+            display: flex;
+            gap: 40px;
+            margin-top: 36px;
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-num {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 44px;
+            font-weight: 700;
+            color: var(--ice);
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(0,212,255,0.5);
+        }
+        .stat-label {
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(200,232,245,0.5);
+            margin-top: 4px;
+        }
+
+        /* ---- SERVICES ---- */
+        #services {
+            padding: 120px 0;
+            background: var(--deep2);
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2px;
+            margin-top: 60px;
+        }
+
+        .service-card {
+            position: relative;
+            padding: 48px 36px;
+            background: rgba(4,18,37,0.8);
+            border: 1px solid rgba(0,212,255,0.08);
+            overflow: hidden;
+            transition: all 0.4s;
+            cursor: default;
+        }
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--ice), transparent);
+            transform: scaleX(0);
+            transition: transform 0.5s;
+        }
+        .service-card:hover {
+            background: rgba(0,212,255,0.05);
+            border-color: rgba(0,212,255,0.25);
+            transform: translateY(-4px);
+        }
+        .service-card:hover::before { transform: scaleX(1); }
+
+        .service-icon {
+            width: 56px; height: 56px;
+            border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 24px;
+            background: rgba(0,212,255,0.05);
+            transition: all 0.3s;
+        }
+        .service-card:hover .service-icon {
+            background: rgba(0,212,255,0.15);
+            box-shadow: 0 0 20px rgba(0,212,255,0.3);
+        }
+        .service-icon i {
+            font-size: 22px;
+            color: var(--ice);
+        }
+
+        .service-num {
+            position: absolute;
+            top: 20px; right: 24px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: rgba(0,212,255,0.2);
+        }
+
+        .service-card h4 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--white);
+            line-height: 1.4;
+        }
+
+        .service-line {
+            width: 30px;
+            height: 1px;
+            background: var(--ice);
+            margin: 16px 0;
+            transition: width 0.4s;
+        }
+        .service-card:hover .service-line { width: 60px; }
+
+        /* ---- CONTACT ---- */
+        #contact {
+            padding: 120px 0;
+            background: linear-gradient(180deg, var(--deep2) 0%, var(--deep) 100%);
+        }
+
+        .contact-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 60px;
+            align-items: start;
+            margin-top: 60px;
+        }
+        @media (max-width: 768px) {
+            .contact-wrapper { grid-template-columns: 1fr; }
+        }
+
+        .contact-info-block {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 24px;
+            background: rgba(4,18,37,0.8);
+            border: 1px solid rgba(0,212,255,0.1);
+            border-radius: 4px;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.3s;
+        }
+        .contact-item:hover {
+            border-color: rgba(0,212,255,0.4);
+            background: rgba(0,212,255,0.05);
+            transform: translateX(6px);
+            color: var(--white);
+        }
+        .contact-item-icon {
+            width: 48px; height: 48px;
+            min-width: 48px;
+            background: rgba(0,212,255,0.1);
+            border: 1px solid rgba(0,212,255,0.25);
+            border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--ice);
+            font-size: 18px;
+        }
+        .contact-item-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--ice);
+            margin-bottom: 4px;
+        }
+        .contact-item-value {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--white);
+        }
+
+        .map-wrap {
+            position: relative;
+        }
+        .map-wrap::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border: 1px solid rgba(0,212,255,0.25);
+            border-radius: 4px;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .map-wrap iframe {
+            width: 100%;
+            height: 420px;
+            border: none;
+            border-radius: 4px;
+            filter: grayscale(80%) contrast(1.1) brightness(0.6) sepia(20%);
+            display: block;
+        }
+
+        /* ---- FOOTER ---- */
+        footer {
+            background: #010810;
+            border-top: 1px solid rgba(0,212,255,0.12);
+            padding: 48px 0 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-logo {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 8px;
+        }
+        .footer-logo span { color: var(--ice); }
+
+        .footer-tagline {
+            font-size: 13px;
+            color: rgba(200,232,245,0.4);
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+        }
+
+        .social-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(200,232,245,0.5);
+            text-decoration: none;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: color 0.3s;
+            margin: 0 12px;
+        }
+        .social-link:hover { color: var(--ice); }
+        .social-link i { font-size: 18px; }
+
+        .footer-divider {
+            height: 1px;
+            background: rgba(0,212,255,0.08);
+            margin: 24px 0;
+        }
+
+        .footer-copy {
+            font-size: 12px;
+            color: rgba(200,232,245,0.3);
+            letter-spacing: 1px;
+        }
+
+        .footer-made {
+            font-size: 13px;
+            color: rgba(200,232,245,0.4);
+            margin-top: 8px;
+        }
+        .footer-made a {
+            color: var(--ice);
+            text-decoration: none;
+        }
+        .footer-made a:hover { color: var(--accent); }
+
+        /* ---- FLOATING PARTICLES ---- */
+        .particle {
+            position: fixed;
+            width: 3px; height: 3px;
+            border-radius: 50%;
+            background: var(--ice);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatUp linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 0; transform: translateY(0) scale(0); }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.2; }
+            100% { opacity: 0; transform: translateY(-100vh) scale(1.5); }
+        }
+
+        /* Responsive */
+        @media (max-width: 767px) {
+            .stat-row { gap: 24px; }
+            .navbar-collapse { text-align: center; padding: 16px 0; }
         }
     </style>
 </head>
+<body>
 
-<body style="padding-top: 50px;">
+<!-- 3D Canvas Background -->
+<canvas id="bgCanvas"></canvas>
 
-    <nav class="navbar navbar-expand-lg fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#"><img width="60px" height="60px" style="border-radius: 50%; object-fit: cover;" src="https://raw.githubusercontent.com/Brigli-The-Coder/Projects-Files/refs/heads/main/Screenshot_20250209_162130_Chrome.jpg" alt=""></a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="small" style="font-weight: 500;">Më shumë</span>
-            </button>
-            <div class="collapse navbar-collapse slid" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" aria-current="page" href="#">Kryefaqja</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="#about">Rreth Nesh</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="#services">Shërbimet</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="#contact">Kontakti</a>
-                    </li>
-                </ul>
-            </div>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg" id="navbar">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" href="#">
+            <img src="https://raw.githubusercontent.com/Brigli-The-Coder/Projects-Files/refs/heads/main/Screenshot_20250209_162130_Chrome.jpg" alt="Clima Service">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            MË SHUMË
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center gap-1">
+                <li class="nav-item"><a class="nav-link" href="#">Kryefaqja</a></li>
+                <li class="nav-item"><a class="nav-link" href="#about">Rreth Nesh</a></li>
+                <li class="nav-item"><a class="nav-link" href="#services">Shërbimet</a></li>
+                <li class="nav-item"><a class="nav-link" href="#contact">Kontakti</a></li>
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
 
-    <!-- Hero Section -->
-    <header class="bg text-white text-center py-5"
-        style="background-image: url('https://raw.githubusercontent.com/Brigli-The-Coder/Projects-Files/refs/heads/main/Clima-Service-2.jpg'); background-size: cover; background-position: center;">
-        <div class="container blurr">
-            <h1 class="display-4">
-                <span class="para">Mirësevini në</span> Clima Service
-            </h1>
-            <p class="lead" data-aos="fade-up" data-aos-delay="500">Shërbimi juaj i besueshëm për riparimin e pajisjeve
-                shtëpiake.</p>
-            <center>Për riparime të shpejta dhe të besueshme, na kontaktoni në numrin e celularit <a class="btn btn-info"
-                    href="tel:+355676984370">këtu</a>.</center>
-        </div>
-    </header>
-
-
-    <!-- About Section -->
-    <section id="about" class="py-5 bg-light">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6" data-aos="fade-up" data-aos-delay="500">
-                    <img src="https://raw.githubusercontent.com/Brigli-The-Coder/Projects-Files/refs/heads/main/Black%20And%20White%20Illustrative%20Home%20Decor%20Logo%20_20250209_163926_0000.png"
-                        alt="Riparim Pajisjesh Shtëpiake" class="img-fluid rounded mb-5">
-                </div>
-                <div class="col-md-6" data-aos="fade-up" data-aos-delay="900">
-                    <h2 class="text-center">Rreth Clima Service</h2>
-                    <p>Clima Service është ofruesi juaj i shërbimeve profesionale dhe efikase për riparimin e pajisjeve
-                        shtëpiake. Ne specializohemi në riparimin e kondicionerëve, lavatriçeve, frigoriferëve dhe shumë
-                        pajisjeve të tjera shtëpiake. Me vite përvoje dhe një ekip teknikësh të aftë, ne sigurojmë që
-                        pajisjet tuaja të funksionojnë si të reja.</p>
-                    <p>Ne mburremi me shërbime të shpejta, të besueshme dhe të përballueshme me fokus në kënaqësinë e
-                        klientëve. Lërini të kujdesemi për nevojat tuaja të riparimit të pajisjeve në mënyrë që ju të
-                        mund të shijoni komoditetin dhe lehtësinë në shtëpi!</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Services Section -->
-    <section id="services" class="services-section py-5">
-        <div class="container">
-            <h2 class="text-center mb-4">Shërbimet tona</h2>
-            <div class="row" data-aos="fade-down" data-aos-delay="900">
-                <div class="col-md-4 text-center">
-                    <i class="bi bi-brush display-4 text-primary"></i>
-                    <h4 class="mt-3">Riparim dhe montim i sistemeve të kondicionimit.(HVAC)</h4>
-                    
-                </div>
-                <div class="col-md-4 text-center">
-                    <i class="bi bi-journal-medical display-4 text-primary"></i>
-                    <h4 class="mt-3">Mirëmbajtje të pajisjeve, larja pastrimi dhe dezinfektimi i pajisjeve të kondicionuara.</h4>
-                    
-                </div>
-                <div class="col-md-4 text-center">
-                    <i class="bi bi-brush display-4 text-primary"></i>
-                    <h4 class="mt-3">Paramontimi i linjave të sistemit të kondicionimit me kasetë brenda në murë.</h4>
-                    
-                </div>
-                <div class="col-md-4 text-center">
-                    <i class="bi bi-brush display-4 text-primary"></i>
-                    <h4 class="mt-3">Ju ofrojmë korrektësi dhe garanci me shërbimet tona.</h4>
-                    
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="py-5">
-        <div class="container">
-            <div class="text-center">
-                <!-- Contact Information -->
-                <div class="col-md-6 mt-4" data-aos="fade-up" data-aos-delay="400">
-                    <h5>Na kontaktoni</h5>
-                    <p>Email: <a class="a" href="mailto:electro1clima@gmail.com">electro1clima@gmail.com</a></p><br>
-                    <p>Telefon: <a class="a" href="tel:+355676984370">+355676984370</a></p><br>
-                    <iframe
-                        src="https://www.google.com/maps/embed?pb=!1m10!1m8!1m3!1d370.280218785165!2d19.5133334!3d42.0594373!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2s!4v1739107515558!5m2!1sen!2s"
-                        width="100%" height="450" style="border: 1px solid black; border-radius: 10px; margin: auto;" allowfullscreen="" loading="lazy"
-                        referrerpolicy="no-referrer-when-downgrade"></iframe>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-dark text-white py-4">
-        <div class="container text-center">
-            <p>&copy; 2024 Clima Service. Të gjitha të drejtat e rezervuara.</p>
-            <p>Na ndiqni në:
-                <a style="text-decoration: none;" target="_blank" href="https://www.tiktok.com/@elektroclima" class="text-white"><i class="fab fa-tiktok"></i> TikTok</a>
-                <a style="text-decoration: none;" target="_blank" href="https://www.instagram.com/@clima__service" class="text-white"><i class="fab fa-instagram"></i> Instagram</a>
-            </p>
-            <p style="text-align: center; font-size: 25px;">Made with ❤️ by 
-            <a href="https://brigli-the-coder.com" style="text-decoration: none;" target="_blank">
-                Brigli The Coder
+<!-- Hero -->
+<section id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+        <div class="hero-eyebrow">Shërbim Profesional · Shkodër, Shqipëri</div>
+        <h1 class="hero-title">
+            Mirësevini në
+            <span>Clima Service</span>
+        </h1>
+        <p class="hero-sub">Shërbimi juaj i besueshëm për riparimin e pajisjeve shtëpiake.<br>Shpejt. Saktë. Garantuar.</p>
+        <div class="hero-cta d-flex gap-3 justify-content-center flex-wrap">
+            <a class="btn-glow" href="tel:+355676984370">
+                <i class="fas fa-phone"></i> Na Kontaktoni
             </a>
-        </p>
+            <a class="btn-outline-glow" href="#services">
+                <i class="fas fa-tools"></i> Shërbimet
+            </a>
         </div>
-    </footer>
+    </div>
+    <div class="hero-scroll">
+        <span></span>
+    </div>
+</section>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        AOS.init();
-    </script>
+<!-- About -->
+<section id="about">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-5" data-aos="fade-right" data-aos-duration="800">
+                <div class="about-image-wrap">
+                    <img src="https://raw.githubusercontent.com/Brigli-The-Coder/Projects-Files/refs/heads/main/Black%20And%20White%20Illustrative%20Home%20Decor%20Logo%20_20250209_163926_0000.png"
+                        alt="Clima Service Logo">
+                </div>
+            </div>
+            <div class="col-lg-7" data-aos="fade-left" data-aos-duration="800" data-aos-delay="200">
+                <div class="about-text">
+                    <div class="section-eyebrow">Rreth Nesh</div>
+                    <h2 class="section-title">Rreth <em>Clima Service</em></h2>
+                    <p>Clima Service është ofruesi juaj i shërbimeve profesionale dhe efikase për riparimin e pajisjeve shtëpiake. Ne specializohemi në riparimin e kondicionerëve, lavatriçeve, frigoriferëve dhe shumë pajisjeve të tjera shtëpiake. Me vite përvoje dhe një ekip teknikësh të aftë, ne sigurojmë që pajisjet tuaja të funksionojnë si të reja.</p>
+                    <p>Ne mburremi me shërbime të shpejta, të besueshme dhe të përballueshme me fokus në kënaqësinë e klientëve. Lërini të kujdesemi për nevojat tuaja të riparimit të pajisjeve në mënyrë që ju të mund të shijoni komoditetin dhe lehtësinë në shtëpi!</p>
+                    <div class="stat-row">
+                        <div class="stat-item">
+                            <div class="stat-num" data-count="10">0</div>
+                            <div class="stat-label">Vite Përvojë</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-num" data-count="500">0</div>
+                            <div class="stat-label">Klientë Të Kënaqur</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-num" data-count="4">0</div>
+                            <div class="stat-label">Shërbime Kryesore</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services -->
+<section id="services">
+    <div class="container">
+        <div class="text-center" data-aos="fade-up">
+            <div class="section-eyebrow justify-content-center" style="gap:12px;">
+                <span style="width:30px;height:1px;background:var(--ice);box-shadow:0 0 8px var(--ice);display:block;"></span>
+                Shërbimet Tona
+                <span style="width:30px;height:1px;background:var(--ice);box-shadow:0 0 8px var(--ice);display:block;"></span>
+            </div>
+            <h2 class="section-title">Çfarë <em>Ofrojmë</em></h2>
+        </div>
+        <div class="service-grid">
+            <div class="service-card" data-aos="fade-up" data-aos-delay="100">
+                <span class="service-num">01</span>
+                <div class="service-icon"><i class="fas fa-snowflake"></i></div>
+                <div class="service-line"></div>
+                <h4>Riparim dhe montim i sistemeve të kondicionimit (HVAC)</h4>
+            </div>
+            <div class="service-card" data-aos="fade-up" data-aos-delay="200">
+                <span class="service-num">02</span>
+                <div class="service-icon"><i class="fas fa-spray-can"></i></div>
+                <div class="service-line"></div>
+                <h4>Mirëmbajtje të pajisjeve, larja pastrimi dhe dezinfektimi i pajisjeve të kondicionuara</h4>
+            </div>
+            <div class="service-card" data-aos="fade-up" data-aos-delay="300">
+                <span class="service-num">03</span>
+                <div class="service-icon"><i class="fas fa-drafting-compass"></i></div>
+                <div class="service-line"></div>
+                <h4>Paramontimi i linjave të sistemit të kondicionimit me kasetë brenda në murë</h4>
+            </div>
+            <div class="service-card" data-aos="fade-up" data-aos-delay="400">
+                <span class="service-num">04</span>
+                <div class="service-icon"><i class="fas fa-shield-alt"></i></div>
+                <div class="service-line"></div>
+                <h4>Ju ofrojmë korrektësi dhe garanci me shërbimet tona</h4>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact -->
+<section id="contact">
+    <div class="container">
+        <div data-aos="fade-up">
+            <div class="section-eyebrow">Kontakti</div>
+            <h2 class="section-title">Na <em>Kontaktoni</em></h2>
+        </div>
+        <div class="contact-wrapper">
+            <div class="contact-info-block" data-aos="fade-right" data-aos-delay="200">
+                <a class="contact-item" href="mailto:electro1clima@gmail.com">
+                    <div class="contact-item-icon"><i class="fas fa-envelope"></i></div>
+                    <div>
+                        <div class="contact-item-label">Email</div>
+                        <div class="contact-item-value">electro1clima@gmail.com</div>
+                    </div>
+                </a>
+                <a class="contact-item" href="tel:+355676984370">
+                    <div class="contact-item-icon"><i class="fas fa-phone"></i></div>
+                    <div>
+                        <div class="contact-item-label">Telefon</div>
+                        <div class="contact-item-value">+355 67 698 4370</div>
+                    </div>
+                </a>
+                <div class="contact-item" style="cursor:default;">
+                    <div class="contact-item-icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <div>
+                        <div class="contact-item-label">Lokacioni</div>
+                        <div class="contact-item-value">Shkodër, Shqipëri</div>
+                    </div>
+                </div>
+                <div style="padding-top: 12px;">
+                    <a class="btn-glow" href="tel:+355676984370" style="width:100%; justify-content:center;">
+                        <i class="fas fa-phone"></i> Telefono Tani
+                    </a>
+                </div>
+            </div>
+            <div class="map-wrap" data-aos="fade-left" data-aos-delay="300">
+                <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m10!1m8!1m3!1d370.280218785165!2d19.5133334!3d42.0594373!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2s!4v1739107515558!5m2!1sen!2s"
+                    allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer>
+    <div class="container text-center">
+        <div class="footer-logo">CLIMA<span> SERVICE</span></div>
+        <div class="footer-tagline">Riparim Profesional Pajisjesh Shtëpiake · Shkodër</div>
+        <div>
+            <a class="social-link" href="https://www.tiktok.com/@elektroclima" target="_blank">
+                <i class="fab fa-tiktok"></i> TikTok
+            </a>
+            <a class="social-link" href="https://www.instagram.com/@clima__service" target="_blank">
+                <i class="fab fa-instagram"></i> Instagram
+            </a>
+        </div>
+        <div class="footer-divider"></div>
+        <div class="footer-copy">&copy; 2024 Clima Service. Të gjitha të drejtat e rezervuara.</div>
+        <div class="footer-made">Made with ❤️ by <a href="https://brigli-the-coder.com" target="_blank">Brigli The Coder</a></div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    AOS.init({ once: true, duration: 700 });
+
+    // Navbar scroll
+    window.addEventListener('scroll', () => {
+        document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // ---- 3D CANVAS ----
+    const canvas = document.getElementById('bgCanvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, particles = [], grid = [];
+    const COLS = 30, ROWS = 20;
+
+    function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        buildGrid();
+    }
+
+    function buildGrid() {
+        grid = [];
+        for (let r = 0; r <= ROWS; r++) {
+            for (let c = 0; c <= COLS; c++) {
+                grid.push({
+                    x: (c / COLS) * W,
+                    y: (r / ROWS) * H,
+                    ox: (c / COLS) * W,
+                    oy: (r / ROWS) * H,
+                    vx: 0, vy: 0,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+        }
+    }
+
+    let t = 0;
+    function animGrid() {
+        for (let p of grid) {
+            const wave = Math.sin(t * 0.4 + p.phase) * 8 + Math.cos(t * 0.3 + p.phase * 1.5) * 6;
+            p.x = p.ox + wave;
+            p.y = p.oy + Math.cos(t * 0.35 + p.phase) * 6;
+        }
+    }
+
+    function drawGrid() {
+        ctx.clearRect(0, 0, W, H);
+
+        // dark base gradient
+        const bg = ctx.createLinearGradient(0, 0, W, H);
+        bg.addColorStop(0, '#010c1a');
+        bg.addColorStop(0.5, '#020e1f');
+        bg.addColorStop(1, '#010c1a');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        // horizontal lines
+        for (let r = 0; r <= ROWS; r++) {
+            ctx.beginPath();
+            for (let c = 0; c <= COLS; c++) {
+                const p = grid[r * (COLS + 1) + c];
+                if (c === 0) ctx.moveTo(p.x, p.y);
+                else ctx.lineTo(p.x, p.y);
+            }
+            const alpha = 0.04 + 0.04 * Math.abs(Math.sin(r / ROWS * Math.PI));
+            ctx.strokeStyle = `rgba(0,212,255,${alpha})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        }
+
+        // vertical lines
+        for (let c = 0; c <= COLS; c++) {
+            ctx.beginPath();
+            for (let r = 0; r <= ROWS; r++) {
+                const p = grid[r * (COLS + 1) + c];
+                if (r === 0) ctx.moveTo(p.x, p.y);
+                else ctx.lineTo(p.x, p.y);
+            }
+            const alpha = 0.04 + 0.04 * Math.abs(Math.sin(c / COLS * Math.PI));
+            ctx.strokeStyle = `rgba(0,212,255,${alpha})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        }
+
+        // intersection dots glow
+        for (let r = 0; r <= ROWS; r += 4) {
+            for (let c = 0; c <= COLS; c += 4) {
+                const p = grid[r * (COLS + 1) + c];
+                const pulse = 0.4 + 0.6 * Math.abs(Math.sin(t * 0.5 + p.phase));
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0,212,255,${0.3 * pulse})`;
+                ctx.fill();
+            }
+        }
+
+        // nebula glows
+        const g1 = ctx.createRadialGradient(W * 0.2, H * 0.3, 0, W * 0.2, H * 0.3, W * 0.4);
+        g1.addColorStop(0, 'rgba(0,80,120,0.12)');
+        g1.addColorStop(1, 'transparent');
+        ctx.fillStyle = g1; ctx.fillRect(0, 0, W, H);
+
+        const g2 = ctx.createRadialGradient(W * 0.8, H * 0.7, 0, W * 0.8, H * 0.7, W * 0.35);
+        g2.addColorStop(0, 'rgba(0,40,80,0.1)');
+        g2.addColorStop(1, 'transparent');
+        ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
+    }
+
+    // floating particles
+    function spawnParticle() {
+        const el = document.createElement('div');
+        el.className = 'particle';
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.bottom = '0';
+        el.style.animationDuration = (8 + Math.random() * 12) + 's';
+        el.style.animationDelay = (Math.random() * 4) + 's';
+        el.style.width = el.style.height = (1 + Math.random() * 3) + 'px';
+        el.style.opacity = 0;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 22000);
+    }
+    setInterval(spawnParticle, 1200);
+
+    function loop() {
+        t += 0.015;
+        animGrid();
+        drawGrid();
+        requestAnimationFrame(loop);
+    }
+
+    // Counter animation
+    function animateCounters() {
+        document.querySelectorAll('[data-count]').forEach(el => {
+            const target = parseInt(el.getAttribute('data-count'));
+            const suffix = el.closest('.stat-item').querySelector('.stat-label').textContent.includes('Klientë') ? '+' : '+';
+            let start = 0;
+            const duration = 1800;
+            const step = timestamp => {
+                if (!start) start = timestamp;
+                const progress = Math.min((timestamp - start) / duration, 1);
+                const ease = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.floor(ease * target) + (progress === 1 ? suffix : '');
+                if (progress < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+        });
+    }
+
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { animateCounters(); observer.disconnect(); } });
+    }, { threshold: 0.5 });
+    const statsEl = document.querySelector('.stat-row');
+    if (statsEl) observer.observe(statsEl);
+
+    window.addEventListener('resize', resize);
+    resize();
+    loop();
+</script>
 </body>
-
 </html>
-
